@@ -1,0 +1,23 @@
+{
+    "name": "Homework 4",
+    "endpoint": "uic/cs450/sp18/homework4",
+   
+    "src": [
+        "resolve.py"
+    ],
+    "tests": {
+        "tests/01.py": "ok_test"
+    },
+
+    "protocols": [
+        "restore",
+        "export",
+        "file_contents",
+        "analytics",
+        "unlock",
+        "lock",
+        "grading",
+        "scoring",  
+        "backup"
+    ]
+}
