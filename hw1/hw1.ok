@@ -1,0 +1,25 @@
+{
+    "name": "Homework 0",
+    "endpoint": "uic/cs450/sp18/homework1",
+   
+    "src": [
+        "hw1.txt",
+        "hw1.pcap.b64"
+    ],
+    "tests": {
+        "tests/01.py": "ok_test",
+        "tests/02.py": "ok_test"  
+    },
+
+    "protocols": [
+        "restore",
+        "export",
+        "file_contents",
+        "analytics",
+        "unlock",
+        "lock",
+        "grading",
+        "scoring",  
+        "backup"
+    ]
+}

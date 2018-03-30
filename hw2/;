@@ -1,0 +1,81 @@
+import logging
+import socket
+import sys
+import ssl
+import urllib.parse
+
+def retrieve_url(url):
+#
+#url has everything from http/https to .com
+#use urllib parse http or https
+#make test case with 
+#    
+    """
+    implement your client code here
+    """
+    parsed = urllib.parse.urlparse(url)
+    scheme = parsed.scheme
+    port = parsed.port
+    host = parsed.netloc
+    path = parsed.path
+    
+    if (scheme == 'http'):
+        if path == '':
+            request = 'GET / HTTP/1.1\r\nHost: ' + host +  "\r\nConnection: close"+ "\r\n\r\n"
+        else:
+            request = "GET " + path +" HTTP/1.1\r\nHost: " + host + "\r\nConnection: close"+ "\r\n\r\n"
+        
+        if port is None:
+            try:
+                s = socket.create_connection ((host, 80))
+            except OSError:
+                return None
+        else:
+            try:
+                s = socket.create_connection ((host.split(':')[0], port))
+            except OSError:
+                return None
+        
+        request_as_bytes = bytearray (request, 'utf-8')
+        
+        s.send(request_as_bytes)
+       
+        ack_msg = s.recv(1024)
+        data = ack_msg
+
+        while True:
+            if len(ack_msg) == 0:
+                break
+            ack_msg = s.recv(1024)
+            data = data + ack_msg
+            
+
+    elif (scheme == 'https'):
+        print()
+    
+    status = data.partition(bytearray('\r\n', 'utf-8'))[0]
+    print (status)
+    status = status.partition(b' ')[2]
+    status = status.partition(b' ')[0]
+    """
+    if (status == b'200'):
+        try:
+            is_chunked = data.index(bytearray('chunked','utf-8'))   
+            data = data.partition(bytearray('\r\n\r\n', 'utf-8'))[2]#parse out header
+            data = data.partition(bytearray('\r\n', 'utf-8'))#parse out the header size
+            data = data.partition(bytearray('\r\n\r\n', 'utf-8'))[0]#parse footer
+            print (data)
+        except ValueError: 
+            """
+            
+    data = data.partition(bytearray('\r\n\r\n', 'utf-8'))[2]
+    
+#        elif (status == b'404'):
+#        return None
+    return data
+
+print (retrieve_url ('http://www.example.com'))
+#print (retrieve_url ('http://www.google.com'))
+#print (retrieve_url ('http://accc.uic.edu/contact'))
+#retrieve_url('http://accc.uic.edu/contact')
+
