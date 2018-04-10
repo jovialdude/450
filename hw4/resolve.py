@@ -31,6 +31,8 @@ ROOT_SERVERS = ("198.41.0.4",
                 "199.7.83.42",
                 "202.12.27.33")
 
+QUERIED_SERVERS_STACK = {} 
+
 def collect_results(name: str) -> dict:
     """"
     This function parses final answers into the proper data structure that
@@ -78,7 +80,6 @@ def collect_results(name: str) -> dict:
 
     return full_response
 
-
 def lookup(target_name: dns.name.Name,
            qtype: dns.rdata.Rdata) -> dns.message.Message:
     """
@@ -92,13 +93,53 @@ def lookup(target_name: dns.name.Name,
     for addr in ROOT_SERVERS:
         try:
             response = dns.query.udp(outbound_query, addr, 3)
-            break
         except dns.exception.Timeout:
             continue
-    print(response)
-    #print_results(collect_results(response))
-    return response
+        except dns.query.BadResponse:
+            continue
+        except dns.query.UnexpectedSource:
+            continue
+        '''
+        For every A record in received in the response, add it to the set
+        of unique server
+        '''
+        name_servers = []#store all the unique name server to a query
+        for each in response.additional:
+            if each.rdtype == dns.rdatatype.A and each not in name_servers:
+                name_servers.append(each)
 
+        auth_servers = []
+        for each in name_servers:
+            try:
+                _name_query = dns.message.make_query(target_name, qtype)
+                response = dns.query.udp(_name_query, str(each.items[0]), 3)
+            except dns.exception.Timeout:
+                continue
+            except dns.query.BadResponse:
+                continue
+            except dns.query.UnexpectedSource:
+                continue
+            if response.answer:
+                return response
+            if response.authority and not response.additional:
+                continue
+            for each in response.additional:
+                if each.rdtype == dns.rdatatype.A:
+                    try:
+                        _authority_query = dns.message.make_query(target_name,
+                                qtype)
+                        response = dns.query.udp(_authority_query,
+                                str(each.items[0]), 3)
+                    except dns.exception.Timeout:
+                        continue
+                    except dns.query.BadResponse:
+                        continue
+                    except dns.query.UnexpectedSource:
+                        continue
+                    if response.answer:
+                        return response
+        #QUERIED_SERVERS_STACK.update
+    return response
 
 def print_results(results: dict) -> None:
     """
@@ -122,8 +163,11 @@ def main():
                                  help="increase output verbosity",
                                  action="store_true")
     program_args = argument_parser.parse_args()
+    fuckall = []
     for a_domain_name in program_args.name:
-        print_results(collect_results(a_domain_name))
+        if a_domain_name not in fuckall:
+            print_results(collect_results(a_domain_name))
+            fuckall.append(a_domain_name)
 
 if __name__ == "__main__":
     main()
